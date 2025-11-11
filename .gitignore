@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Data files and large files
+*.vcf
+*.vcf.gz
+*.vcf.bgz
+*.bcf
+*.bed
+*.bim
+*.fam
+*.hdf5
+*.h5
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# Model weights and checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+checkpoints/
+weights/
+models/*.pt
+models/*.pth
+
+# Logs and results
+*.log
+logs/
+runs/
+results/
+outputs/
+tensorboard/
+
+# Cache
+cache/
+.cache/
+*.cache
+
+# Examples and test data (uncomment if you want to exclude)
+examples/
+# test_data/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
