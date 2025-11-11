@@ -1398,10 +1398,11 @@ def inference_and_write(base_model, smoother_model, test_loader, args,
     OPTIMIZED VERSION: Batch file writes and minimize CPU-GPU transfers.
 
     Key optimizations:
-    1. Pre-allocate zeros tensor outside loop
+    1. Use unsqueeze for position encoding (avoids unnecessary zeros tensor)
     2. Batch DataFrame operations and CSV writes (write every 10 batches)
     3. Minimize CPU-GPU transfers by keeping data on GPU longer
-    4. Use numpy operations directly instead of pandas where possible
+    4. Use memory-efficient data types (int8, float32 instead of int, float64)
+    5. Create transposed DataFrames directly without intermediate operations
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     base_model.eval().to(device)
@@ -1435,8 +1436,9 @@ def inference_and_write(base_model, smoother_model, test_loader, args,
             preds = basemodel_output["predictions"]
             pos = batch["pos"].to(preds.device)
 
-            # OPTIMIZATION: Simplify position encoding - no need for zeros tensor
-            pos = (pos / 1000000 / 100).unsqueeze(1).expand(-1, preds.shape[2], -1).transpose(1, 2)
+            # OPTIMIZATION: Use unsqueeze for broadcasting instead of creating zeros tensor
+            # This achieves the same result as: pos + torch.zeros([b, 1, s])
+            pos = (pos / 1000000 / 100).unsqueeze(1)
 
             output = smoother_model(preds, pos=pos)
             output = torch.nn.functional.pad(output, (0, pad_num), value=0)
