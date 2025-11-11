@@ -271,7 +271,16 @@ def main():
                     single_arc=args.anc
                 )
 
-            test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=reference_panel_collate, shuffle=False, num_workers=0)
+            # OPTIMIZATION: Use pin_memory for faster CPU-GPU transfer on CUDA devices
+            # Note: num_workers=0 is correct for Windows; on Linux consider num_workers=2-4
+            test_loader = DataLoader(
+                test_dataset,
+                batch_size=1,
+                collate_fn=reference_panel_collate,
+                shuffle=False,
+                num_workers=0,
+                pin_memory=torch.cuda.is_available()  # Faster GPU transfer when CUDA available
+            )
             info = test_dataset.info
 
             current_index_counter, current_index_filter_counter = inference_and_write(
