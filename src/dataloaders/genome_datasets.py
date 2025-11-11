@@ -404,13 +404,32 @@ def vcf_to_npy(vcf_file, samples_to_load=None):
 
 
 def ref_pan_to_tensor(item):
-    item["mixed_vcf"] = torch.tensor(item["mixed_vcf"]).float()
+    """
+    Convert numpy arrays to tensors efficiently.
+
+    OPTIMIZATION: Use torch.from_numpy() for zero-copy conversion when possible,
+    then convert dtype. This is more memory-efficient than torch.tensor().
+    """
+    # Convert mixed_vcf (int8 numpy array -> float32 tensor)
+    if isinstance(item["mixed_vcf"], np.ndarray):
+        item["mixed_vcf"] = torch.from_numpy(item["mixed_vcf"]).float()
+    else:
+        item["mixed_vcf"] = torch.tensor(item["mixed_vcf"]).float()
 
     if "mixed_labels" in item.keys():
-        item["mixed_labels"] = torch.tensor(item["mixed_labels"]).long()
+        if isinstance(item["mixed_labels"], np.ndarray):
+            item["mixed_labels"] = torch.from_numpy(item["mixed_labels"]).long()
+        else:
+            item["mixed_labels"] = torch.tensor(item["mixed_labels"]).long()
 
+    # Convert reference panel arrays (int8 numpy -> float32 tensor)
     for c in item["ref_panel"]:
-        item["ref_panel"][c] = torch.tensor(item["ref_panel"][c]).float()
+        if isinstance(item["ref_panel"][c], np.ndarray):
+            # OPTIMIZATION: from_numpy creates a view (zero-copy), then we convert dtype
+            # This is faster and more memory-efficient than torch.tensor()
+            item["ref_panel"][c] = torch.from_numpy(item["ref_panel"][c]).float()
+        else:
+            item["ref_panel"][c] = torch.tensor(item["ref_panel"][c]).float()
 
     return item
 
