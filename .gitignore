@@ -48,18 +48,23 @@ env/
 *.h5
 *.npy
 *.npz
+
+# Pickle files (but keep exp/ directory)
 *.pkl
 *.pickle
+!exp/**/*.pkl
+!exp/**/*.pckl
 
 # Model weights and checkpoints
-*.pt
-*.pth
+# IMPORTANT: Keep trained models in exp/ directory for inference
+!exp/**/models/*.pth
+!exp/**/models/*.pt
+
+# Ignore other checkpoint formats
 *.ckpt
 *.safetensors
 checkpoints/
 weights/
-models/*.pt
-models/*.pth
 
 # Logs and results
 *.log
