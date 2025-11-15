@@ -622,12 +622,35 @@ class AgnosticModelInferNoSmoother(nn.Module):
                 out[:,Nean,:] = out[:,Den,:]
             if single_arc==1:
                 out[:,Den,:] = out[:,Nean,:]
+
+            # FIX: Handle single archaic source case - ensure out_avg always has 3 channels
             if len(out_avg_list)>0:
                 out_avg = torch.cat(out_avg_list, dim=0)
                 if single_arc==2:
                     out_avg[:,Nean,:] = out_avg[:,Den,:]
                 if single_arc==1:
                     out_avg[:,Den,:] = out_avg[:,Nean,:]
+
+                # Ensure out_avg has exactly 3 channels (for single archaic source scenarios)
+                # If it has fewer channels, pad with the appropriate channels from out_avg
+                if out_avg.shape[1] < 3:
+                    # Create a full 3-channel tensor, initialized with zeros or copied channels
+                    B_avg, C_avg, L_avg = out_avg.shape
+                    out_avg_full = torch.zeros(B_avg, 3, L_avg, device=out_avg.device, dtype=out_avg.dtype)
+
+                    # Copy available channels
+                    out_avg_full[:, :C_avg, :] = out_avg
+
+                    # For missing channels, copy from the existing ones (handles single archaic)
+                    if C_avg == 1:
+                        # If only 1 channel, replicate it to all 3
+                        out_avg_full[:, 1:, :] = out_avg[:, 0:1, :].expand(-1, 2, -1)
+                    elif C_avg == 2:
+                        # If 2 channels, copy the last one
+                        out_avg_full[:, 2, :] = out_avg[:, 1, :]
+
+                    out_avg = out_avg_full
+
                 out = torch.cat([out, out_avg], dim=1)
 
             out = self.dropout(out)
