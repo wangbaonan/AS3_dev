@@ -233,11 +233,38 @@ class AvgPool(nn.Module):
 
 
 def stack_ancestries(inp):
+    """
+    Stack ancestry predictions from reference panel comparison.
+
+    FIX: Ensures output always has 3 channels (ancestries 0, 1, 2),
+    even if reference panel is missing some ancestry groups.
+    This handles single/dual archaic source scenarios.
+    """
     out = []
     for i, x in enumerate(inp):
-        out_sample = [None] * len(x.keys())
+        # FIX: Always create 3 channels, even if some ancestries are missing
+        # Ancestry indices: 0=African, 1=Denisovan, 2=Neanderthal
+        out_sample = [None] * 3
+
         for ancestry in x.keys():
-            out_sample[ancestry] = x[ancestry]
+            if ancestry < 3:  # Safety check
+                out_sample[ancestry] = x[ancestry]
+
+        # Fill missing ancestries with zeros
+        first_valid = None
+        for idx, tensor in enumerate(out_sample):
+            if tensor is not None:
+                first_valid = tensor
+                break
+
+        if first_valid is None:
+            raise ValueError("No valid ancestry data found in reference panel")
+
+        # Replace None with zero tensors of the same shape
+        for idx in range(3):
+            if out_sample[idx] is None:
+                out_sample[idx] = torch.zeros_like(first_valid)
+
         out_sample = torch.cat(out_sample)
         out.append(out_sample)
     out = torch.stack(out)
