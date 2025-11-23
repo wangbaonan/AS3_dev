@@ -1477,11 +1477,13 @@ def inference_and_write(base_model, smoother_model, test_loader, args,
             # Process bed file data
             a = predicted_labels.cpu().numpy().astype(np.int8)  # Use int8 instead of int
 
-            # OPTIMIZATION: Create transposed data directly without DataFrame
-            df_T_data = {'POS': sample_filtered_pos}
-            for hap_idx in range(a.shape[0]):
-                df_T_data[hap_idx] = a[hap_idx]
-            df_T = pd.DataFrame(df_T_data)
+            # FIX: Must use the ORIGINAL approach to maintain correct haplotype indexing
+            # The row index (current_index_filter + i) becomes the column name after transpose
+            df_filtered = pd.DataFrame(a, columns=sample_filtered_pos)
+            df_filtered.index = range(current_index_filter, current_index_filter + len(df_filtered))
+
+            df_T = df_filtered.T.reset_index(drop=False)
+            df_T.rename(columns={'index': 'POS'}, inplace=True)
             haplotype_columns = [col for col in df_T.columns if col != 'POS']
 
             introgression_segments_df = find_introgression_segments(
